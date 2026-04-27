@@ -522,6 +522,9 @@ const Index = () => {
               );
             })()}
 
+            {/* Image Position / Crop on Target */}
+            <ImageTransformControls value={transform} onChange={setTransform} />
+
             {/* Adjustments */}
             <ImageAdjustments
               value={adjustments}
