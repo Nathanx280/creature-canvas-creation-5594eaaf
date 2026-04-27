@@ -4,7 +4,8 @@ import {
 } from "lucide-react";
 import { useRef, useState, useCallback, ChangeEvent, useEffect, useMemo } from "react";
 import JSZip from "jszip";
-import { PAINTING_TARGETS, convertImageToPNT, downloadPNT } from "@/lib/pnt-converter";
+import { PAINTING_TARGETS, convertImageToPNT, downloadPNT, DEFAULT_TRANSFORM, ImageTransform } from "@/lib/pnt-converter";
+import ImageTransformControls from "@/components/ImageTransformControls";
 import { ARK_PALETTE } from "@/lib/ark-palette";
 import { applyAdjustments } from "@/lib/image-adjustments";
 import { autoPickPalette } from "@/lib/auto-palette";
@@ -29,6 +30,7 @@ const Index = () => {
   const [selectedTarget, setSelectedTarget] = useState(0);
   const [dithering, setDithering] = useState(true);
   const [adjustments, setAdjustments] = useState<Adjustments>(DEFAULT_ADJUSTMENTS);
+  const [transform, setTransform] = useState<ImageTransform>(DEFAULT_TRANSFORM);
   const [enabledColors, setEnabledColors] = useState<Set<number>>(
     () => new Set(ARK_PALETTE.map((c) => c.index))
   );
