@@ -232,6 +232,7 @@ const Index = () => {
     setPreviewImageData(null);
     setPntData(null);
     setAdjustments(DEFAULT_ADJUSTMENTS);
+    setTransform(DEFAULT_TRANSFORM);
     setHistory([DEFAULT_ADJUSTMENTS]);
     setHIndex(0);
     if (fileInputRef.current) fileInputRef.current.value = "";
