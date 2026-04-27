@@ -372,19 +372,18 @@ export const PAINTING_TARGETS: PaintingTarget[] = [
   { name: "Riot Gauntlets", suffix: "_RiotGloves_C", width: 256, height: 256, category: "armor" },
   { name: "Riot Helmet", suffix: "_RiotHat_C", width: 256, height: 256, category: "armor" },
 
-  // ===== Weapons =====
+  // ===== Weapons (only paintbrush-paintable primitives) =====
   { name: "Crossbow", suffix: "_Crossbow_C", width: 256, height: 256, category: "weapons" },
   { name: "Longneck Rifle", suffix: "_LongneckRifle_C", width: 256, height: 256, category: "weapons" },
-  { name: "Assault Rifle", suffix: "_AssaultRifle_C", width: 256, height: 256, category: "weapons" },
   { name: "Pump-Action Shotgun", suffix: "_PumpShotgun_C", width: 256, height: 256, category: "weapons" },
-  { name: "Fabricated Sniper", suffix: "_FabricatedSniper_C", width: 256, height: 256, category: "weapons" },
-  { name: "Tek Rifle", suffix: "_TekRifle_C", width: 256, height: 256, category: "weapons" },
-  { name: "Tek Sword", suffix: "_TekSword_C", width: 256, height: 256, category: "weapons" },
   { name: "Bow", suffix: "_Bow_C", width: 256, height: 256, category: "weapons" },
   { name: "Compound Bow", suffix: "_CompoundBow_C", width: 256, height: 256, category: "weapons" },
   { name: "Pike", suffix: "_Pike_C", width: 256, height: 256, category: "weapons" },
   { name: "Sword", suffix: "_Sword_C", width: 256, height: 256, category: "weapons" },
   { name: "Whip", suffix: "_Whip_C", width: 256, height: 256, category: "weapons" },
+  // Removed: Assault Rifle, Fabricated Sniper, Tek Rifle, Tek Sword
+  // — these modern/Tek weapons cannot be painted with the paintbrush.
+
 
   // ===== More Structures =====
   { name: "Wooden Wall", suffix: "_Wall_Wood_C", width: 256, height: 256, category: "structures" },
