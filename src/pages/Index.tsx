@@ -145,14 +145,15 @@ const Index = () => {
         target.width,
         target.height,
         enabledColors,
-        dithering
+        dithering,
+        transform
       );
       setPreviewImageData(result.previewImageData);
       setPntData(result.pntData);
       setConverting(false);
     }, 50);
     return () => clearTimeout(timeout);
-  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height]);
+  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height, transform]);
 
   // Palette usage stats from preview
   const usageStats = useMemo(() => {
@@ -191,7 +192,7 @@ const Index = () => {
       const zip = new JSZip();
       Array.from(batchSelection).forEach((idx) => {
         const t = PAINTING_TARGETS[idx];
-        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering);
+        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering, transform);
         zip.file(`${fileName}${t.suffix}.pnt`, result.pntData);
       });
       const blob = await zip.generateAsync({ type: "blob" });
@@ -204,7 +205,7 @@ const Index = () => {
     } else {
       Array.from(batchSelection).forEach((idx) => {
         const t = PAINTING_TARGETS[idx];
-        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering);
+        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering, transform);
         downloadPNT(result.pntData, `${fileName}${t.suffix}.pnt`);
       });
     }
