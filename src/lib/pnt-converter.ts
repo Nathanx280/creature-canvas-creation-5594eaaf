@@ -372,19 +372,18 @@ export const PAINTING_TARGETS: PaintingTarget[] = [
   { name: "Riot Gauntlets", suffix: "_RiotGloves_C", width: 256, height: 256, category: "armor" },
   { name: "Riot Helmet", suffix: "_RiotHat_C", width: 256, height: 256, category: "armor" },
 
-  // ===== Weapons =====
+  // ===== Weapons (only paintbrush-paintable primitives) =====
   { name: "Crossbow", suffix: "_Crossbow_C", width: 256, height: 256, category: "weapons" },
   { name: "Longneck Rifle", suffix: "_LongneckRifle_C", width: 256, height: 256, category: "weapons" },
-  { name: "Assault Rifle", suffix: "_AssaultRifle_C", width: 256, height: 256, category: "weapons" },
   { name: "Pump-Action Shotgun", suffix: "_PumpShotgun_C", width: 256, height: 256, category: "weapons" },
-  { name: "Fabricated Sniper", suffix: "_FabricatedSniper_C", width: 256, height: 256, category: "weapons" },
-  { name: "Tek Rifle", suffix: "_TekRifle_C", width: 256, height: 256, category: "weapons" },
-  { name: "Tek Sword", suffix: "_TekSword_C", width: 256, height: 256, category: "weapons" },
   { name: "Bow", suffix: "_Bow_C", width: 256, height: 256, category: "weapons" },
   { name: "Compound Bow", suffix: "_CompoundBow_C", width: 256, height: 256, category: "weapons" },
   { name: "Pike", suffix: "_Pike_C", width: 256, height: 256, category: "weapons" },
   { name: "Sword", suffix: "_Sword_C", width: 256, height: 256, category: "weapons" },
   { name: "Whip", suffix: "_Whip_C", width: 256, height: 256, category: "weapons" },
+  // Removed: Assault Rifle, Fabricated Sniper, Tek Rifle, Tek Sword
+  // — these modern/Tek weapons cannot be painted with the paintbrush.
+
 
   // ===== More Structures =====
   { name: "Wooden Wall", suffix: "_Wall_Wood_C", width: 256, height: 256, category: "structures" },
@@ -393,14 +392,9 @@ export const PAINTING_TARGETS: PaintingTarget[] = [
   { name: "Metal Wall", suffix: "_Wall_Metal_C", width: 256, height: 256, category: "structures" },
   { name: "Tek Wall", suffix: "_Wall_Tek_C", width: 256, height: 256, category: "structures" },
   { name: "Greenhouse Wall", suffix: "_Wall_Greenhouse_C", width: 256, height: 256, category: "structures" },
-  { name: "Storage Box", suffix: "_StorageBox_C", width: 256, height: 256, category: "structures" },
-  { name: "Vault", suffix: "_Vault_C", width: 256, height: 256, category: "structures" },
-  { name: "Smithy", suffix: "_Smithy_C", width: 256, height: 256, category: "structures" },
-  { name: "Industrial Forge", suffix: "_IndustrialForge_C", width: 256, height: 256, category: "structures" },
-  { name: "Refrigerator", suffix: "_Refrigerator_C", width: 256, height: 256, category: "structures" },
-  { name: "Bookshelf", suffix: "_Bookshelf_C", width: 256, height: 256, category: "structures" },
-  { name: "Wooden Table", suffix: "_Table_Wood_C", width: 256, height: 256, category: "structures" },
-  { name: "Wooden Chair", suffix: "_Chair_Wood_C", width: 256, height: 256, category: "structures" },
+  // Removed: Storage Box, Vault, Smithy, Industrial Forge, Refrigerator,
+  // Bookshelf, Wooden Table, Wooden Chair — these cannot be painted with
+  // the in-game paintbrush (no paintable region surface).
 ];
 
 export const CATEGORY_LABELS: Record<TargetCategory, string> = {
@@ -438,30 +432,100 @@ export function getTargetsByCategory(): Record<TargetCategory, PaintingTarget[]>
   return grouped;
 }
 
+export type FitMode = "contain" | "cover" | "stretch";
+
+export interface ImageTransform {
+  /** -1..1 horizontal offset, fraction of target width (after fit). 0 = centered. */
+  offsetX: number;
+  /** -1..1 vertical offset, fraction of target height (after fit). 0 = centered. */
+  offsetY: number;
+  /** Multiplier on top of the fit scale. 1 = neutral. */
+  scale: number;
+  /** Rotation in degrees, around the target center. */
+  rotation: number;
+  /** How to fit the image inside the target rect. */
+  fit: FitMode;
+  /** Flip horizontally. */
+  flipX?: boolean;
+  /** Flip vertically. */
+  flipY?: boolean;
+}
+
+export const DEFAULT_TRANSFORM: ImageTransform = {
+  offsetX: 0,
+  offsetY: 0,
+  scale: 1,
+  rotation: 0,
+  fit: "contain",
+  flipX: false,
+  flipY: false,
+};
+
 export function convertImageToPNT(
   imageData: ImageData,
   targetWidth: number,
   targetHeight: number,
   enabledColors: Set<number>,
-  dithering: boolean
+  dithering: boolean,
+  transform: ImageTransform = DEFAULT_TRANSFORM
 ): PNTResult {
-  // Scale image to target size using canvas
+  // Build target canvas
   const canvas = document.createElement("canvas");
   canvas.width = targetWidth;
   canvas.height = targetHeight;
   const ctx = canvas.getContext("2d")!;
 
-  // Create temp canvas with source image
+  // Source canvas
   const srcCanvas = document.createElement("canvas");
   srcCanvas.width = imageData.width;
   srcCanvas.height = imageData.height;
   const srcCtx = srcCanvas.getContext("2d")!;
   srcCtx.putImageData(imageData, 0, 0);
 
-  // Draw scaled
-  ctx.drawImage(srcCanvas, 0, 0, targetWidth, targetHeight);
+  // Compute fit
+  const sw = imageData.width;
+  const sh = imageData.height;
+  const targetAspect = targetWidth / targetHeight;
+  const srcAspect = sw / sh;
+
+  let drawW = targetWidth;
+  let drawH = targetHeight;
+  if (transform.fit === "contain") {
+    if (srcAspect > targetAspect) {
+      drawW = targetWidth;
+      drawH = targetWidth / srcAspect;
+    } else {
+      drawH = targetHeight;
+      drawW = targetHeight * srcAspect;
+    }
+  } else if (transform.fit === "cover") {
+    if (srcAspect > targetAspect) {
+      drawH = targetHeight;
+      drawW = targetHeight * srcAspect;
+    } else {
+      drawW = targetWidth;
+      drawH = targetWidth / srcAspect;
+    }
+  } // stretch: drawW/drawH stay at target size
+
+  drawW *= transform.scale;
+  drawH *= transform.scale;
+
+  const cx = targetWidth / 2 + transform.offsetX * targetWidth;
+  const cy = targetHeight / 2 + transform.offsetY * targetHeight;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.translate(cx, cy);
+  if (transform.rotation) ctx.rotate((transform.rotation * Math.PI) / 180);
+  ctx.scale(transform.flipX ? -1 : 1, transform.flipY ? -1 : 1);
+  ctx.drawImage(srcCanvas, -drawW / 2, -drawH / 2, drawW, drawH);
+  ctx.restore();
+
   const scaledData = ctx.getImageData(0, 0, targetWidth, targetHeight);
   const pixels = scaledData.data;
+
 
   const totalPixels = targetWidth * targetHeight;
   const bits = new Uint8Array(totalPixels);

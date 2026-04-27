@@ -4,7 +4,8 @@ import {
 } from "lucide-react";
 import { useRef, useState, useCallback, ChangeEvent, useEffect, useMemo } from "react";
 import JSZip from "jszip";
-import { PAINTING_TARGETS, convertImageToPNT, downloadPNT } from "@/lib/pnt-converter";
+import { PAINTING_TARGETS, convertImageToPNT, downloadPNT, DEFAULT_TRANSFORM, ImageTransform } from "@/lib/pnt-converter";
+import ImageTransformControls from "@/components/ImageTransformControls";
 import { ARK_PALETTE } from "@/lib/ark-palette";
 import { applyAdjustments } from "@/lib/image-adjustments";
 import { autoPickPalette } from "@/lib/auto-palette";
@@ -29,6 +30,7 @@ const Index = () => {
   const [selectedTarget, setSelectedTarget] = useState(0);
   const [dithering, setDithering] = useState(true);
   const [adjustments, setAdjustments] = useState<Adjustments>(DEFAULT_ADJUSTMENTS);
+  const [transform, setTransform] = useState<ImageTransform>(DEFAULT_TRANSFORM);
   const [enabledColors, setEnabledColors] = useState<Set<number>>(
     () => new Set(ARK_PALETTE.map((c) => c.index))
   );
@@ -143,14 +145,15 @@ const Index = () => {
         target.width,
         target.height,
         enabledColors,
-        dithering
+        dithering,
+        transform
       );
       setPreviewImageData(result.previewImageData);
       setPntData(result.pntData);
       setConverting(false);
     }, 50);
     return () => clearTimeout(timeout);
-  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height]);
+  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height, transform]);
 
   // Palette usage stats from preview
   const usageStats = useMemo(() => {
@@ -189,7 +192,7 @@ const Index = () => {
       const zip = new JSZip();
       Array.from(batchSelection).forEach((idx) => {
         const t = PAINTING_TARGETS[idx];
-        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering);
+        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering, transform);
         zip.file(`${fileName}${t.suffix}.pnt`, result.pntData);
       });
       const blob = await zip.generateAsync({ type: "blob" });
@@ -202,7 +205,7 @@ const Index = () => {
     } else {
       Array.from(batchSelection).forEach((idx) => {
         const t = PAINTING_TARGETS[idx];
-        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering);
+        const result = convertImageToPNT(sourceImageData, t.width, t.height, enabledColors, dithering, transform);
         downloadPNT(result.pntData, `${fileName}${t.suffix}.pnt`);
       });
     }
@@ -229,6 +232,7 @@ const Index = () => {
     setPreviewImageData(null);
     setPntData(null);
     setAdjustments(DEFAULT_ADJUSTMENTS);
+    setTransform(DEFAULT_TRANSFORM);
     setHistory([DEFAULT_ADJUSTMENTS]);
     setHIndex(0);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -517,6 +521,9 @@ const Index = () => {
                 />
               );
             })()}
+
+            {/* Image Position / Crop on Target */}
+            <ImageTransformControls value={transform} onChange={setTransform} />
 
             {/* Adjustments */}
             <ImageAdjustments
