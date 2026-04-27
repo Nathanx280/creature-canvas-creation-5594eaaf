@@ -63,14 +63,14 @@ const ImageTransformControls = ({ value, onChange }: Props) => {
             <FlipVertical2 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => set("rotation", (value.rotation - 90 + 360) % 360 - (value.rotation - 90 >= 0 ? 0 : 0))}
+            onClick={() => set("rotation", value.rotation - 90)}
             className="btn-ghost !p-1.5"
             title="Rotate -90°"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => set("rotation", (value.rotation + 90) % 360)}
+            onClick={() => set("rotation", value.rotation + 90)}
             className="btn-ghost !p-1.5"
             title="Rotate +90°"
           >
