@@ -393,14 +393,9 @@ export const PAINTING_TARGETS: PaintingTarget[] = [
   { name: "Metal Wall", suffix: "_Wall_Metal_C", width: 256, height: 256, category: "structures" },
   { name: "Tek Wall", suffix: "_Wall_Tek_C", width: 256, height: 256, category: "structures" },
   { name: "Greenhouse Wall", suffix: "_Wall_Greenhouse_C", width: 256, height: 256, category: "structures" },
-  { name: "Storage Box", suffix: "_StorageBox_C", width: 256, height: 256, category: "structures" },
-  { name: "Vault", suffix: "_Vault_C", width: 256, height: 256, category: "structures" },
-  { name: "Smithy", suffix: "_Smithy_C", width: 256, height: 256, category: "structures" },
-  { name: "Industrial Forge", suffix: "_IndustrialForge_C", width: 256, height: 256, category: "structures" },
-  { name: "Refrigerator", suffix: "_Refrigerator_C", width: 256, height: 256, category: "structures" },
-  { name: "Bookshelf", suffix: "_Bookshelf_C", width: 256, height: 256, category: "structures" },
-  { name: "Wooden Table", suffix: "_Table_Wood_C", width: 256, height: 256, category: "structures" },
-  { name: "Wooden Chair", suffix: "_Chair_Wood_C", width: 256, height: 256, category: "structures" },
+  // Removed: Storage Box, Vault, Smithy, Industrial Forge, Refrigerator,
+  // Bookshelf, Wooden Table, Wooden Chair — these cannot be painted with
+  // the in-game paintbrush (no paintable region surface).
 ];
 
 export const CATEGORY_LABELS: Record<TargetCategory, string> = {
