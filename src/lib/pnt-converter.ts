@@ -434,6 +434,14 @@ export function getTargetsByCategory(): Record<TargetCategory, PaintingTarget[]>
 
 export type FitMode = "contain" | "cover" | "stretch";
 
+/**
+ * How the image is laid out across the texture canvas. Because ARK creature/human
+ * UV maps split the body into many separate islands inside one square texture,
+ * a single flat image only covers some islands and leaves others bare or
+ * randomly colored. Tiling the image makes coverage even across all UV islands.
+ */
+export type SpreadMode = "single" | "tile" | "mirror";
+
 export interface ImageTransform {
   /** -1..1 horizontal offset, fraction of target width (after fit). 0 = centered. */
   offsetX: number;
@@ -449,6 +457,10 @@ export interface ImageTransform {
   flipX?: boolean;
   /** Flip vertically. */
   flipY?: boolean;
+  /** Spread mode for even coverage on creatures/humans. */
+  spread?: SpreadMode;
+  /** Tile count per axis when spread = tile/mirror (1..8). */
+  tile?: number;
 }
 
 export const DEFAULT_TRANSFORM: ImageTransform = {
@@ -459,6 +471,8 @@ export const DEFAULT_TRANSFORM: ImageTransform = {
   fit: "contain",
   flipX: false,
   flipY: false,
+  spread: "single",
+  tile: 3,
 };
 
 export function convertImageToPNT(
