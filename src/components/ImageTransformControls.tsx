@@ -109,6 +109,43 @@ const ImageTransformControls = ({ value, onChange }: Props) => {
         ))}
       </div>
 
+      <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Spread</span>
+          {SPREADS.map((s) => {
+            const active = (value.spread ?? "single") === s.value;
+            return (
+              <button
+                key={s.value}
+                onClick={() => set("spread", s.value)}
+                title={s.hint}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  active
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 text-muted-foreground border-border/60 hover:text-foreground"
+                }`}
+              >
+                {s.icon}{s.label}
+              </button>
+            );
+          })}
+        </div>
+        {(value.spread ?? "single") !== "single" && (
+          <Slider
+            label="Tile Count" icon={<Grid3x3 className="w-3 h-3" />}
+            min={1} max={8} step={1}
+            value={value.tile ?? 3}
+            onChange={(v) => set("tile", Math.round(v))}
+            suffix="×"
+          />
+        )}
+        <p className="text-[10px] text-muted-foreground leading-snug">
+          ARK creature & human textures split the body into many UV islands. Use
+          <b> Tile</b> or <b>Mirror</b> so your image colors land evenly on every body part
+          (arms, torso, legs) instead of clumping into one area.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Slider
           label="Offset X" icon={<Move className="w-3 h-3" />}
