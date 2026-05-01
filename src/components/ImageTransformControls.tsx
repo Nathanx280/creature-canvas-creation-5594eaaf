@@ -1,5 +1,5 @@
-import { Move, Maximize, RotateCw, FlipHorizontal2, FlipVertical2, RotateCcw, Crop } from "lucide-react";
-import { ImageTransform, FitMode, DEFAULT_TRANSFORM } from "@/lib/pnt-converter";
+import { Move, Maximize, RotateCw, FlipHorizontal2, FlipVertical2, RotateCcw, Crop, Grid3x3, Square, FlipHorizontal } from "lucide-react";
+import { ImageTransform, FitMode, SpreadMode, DEFAULT_TRANSFORM } from "@/lib/pnt-converter";
 
 interface Props {
   value: ImageTransform;
