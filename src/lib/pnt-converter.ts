@@ -515,8 +515,17 @@ export function convertImageToPNT(
   const cy = targetHeight / 2 + transform.offsetY * targetHeight;
 
   ctx.save();
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
+  // Crisp output: if we're upscaling the source onto the target (common for
+  // small paint canvases like 256x256), bilinear smoothing softens edges and
+  // muddies the palette mapping. Use nearest-neighbor for upscale, high-quality
+  // smoothing only when downscaling a larger image into the target.
+  const isUpscaling = Math.abs(drawW) > sw || Math.abs(drawH) > sh;
+  if (isUpscaling) {
+    ctx.imageSmoothingEnabled = false;
+  } else {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+  }
   ctx.translate(cx, cy);
   if (transform.rotation) ctx.rotate((transform.rotation * Math.PI) / 180);
   ctx.scale(transform.flipX ? -1 : 1, transform.flipY ? -1 : 1);
