@@ -12,6 +12,12 @@ const FITS: { value: FitMode; label: string }[] = [
   { value: "stretch", label: "Stretch" },
 ];
 
+const SPREADS: { value: SpreadMode; label: string; icon: React.ReactNode; hint: string }[] = [
+  { value: "single", label: "Single", icon: <Square className="w-3 h-3" />, hint: "One image — may look blotchy on creatures/humans" },
+  { value: "tile", label: "Tile", icon: <Grid3x3 className="w-3 h-3" />, hint: "Repeat across all UV islands for even body coverage" },
+  { value: "mirror", label: "Mirror", icon: <FlipHorizontal className="w-3 h-3" />, hint: "Tile with mirroring — seamless edges, even coverage" },
+];
+
 const Slider = ({
   label, icon, min, max, step, value, onChange, suffix, format,
 }: {
