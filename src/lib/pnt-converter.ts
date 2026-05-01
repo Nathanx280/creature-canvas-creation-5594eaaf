@@ -434,6 +434,14 @@ export function getTargetsByCategory(): Record<TargetCategory, PaintingTarget[]>
 
 export type FitMode = "contain" | "cover" | "stretch";
 
+/**
+ * How the image is laid out across the texture canvas. Because ARK creature/human
+ * UV maps split the body into many separate islands inside one square texture,
+ * a single flat image only covers some islands and leaves others bare or
+ * randomly colored. Tiling the image makes coverage even across all UV islands.
+ */
+export type SpreadMode = "single" | "tile" | "mirror";
+
 export interface ImageTransform {
   /** -1..1 horizontal offset, fraction of target width (after fit). 0 = centered. */
   offsetX: number;
@@ -449,6 +457,10 @@ export interface ImageTransform {
   flipX?: boolean;
   /** Flip vertically. */
   flipY?: boolean;
+  /** Spread mode for even coverage on creatures/humans. */
+  spread?: SpreadMode;
+  /** Tile count per axis when spread = tile/mirror (1..8). */
+  tile?: number;
 }
 
 export const DEFAULT_TRANSFORM: ImageTransform = {
@@ -459,6 +471,8 @@ export const DEFAULT_TRANSFORM: ImageTransform = {
   fit: "contain",
   flipX: false,
   flipY: false,
+  spread: "single",
+  tile: 3,
 };
 
 export function convertImageToPNT(
@@ -526,10 +540,43 @@ export function convertImageToPNT(
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
   }
-  ctx.translate(cx, cy);
-  if (transform.rotation) ctx.rotate((transform.rotation * Math.PI) / 180);
-  ctx.scale(transform.flipX ? -1 : 1, transform.flipY ? -1 : 1);
-  ctx.drawImage(srcCanvas, -drawW / 2, -drawH / 2, drawW, drawH);
+
+  const spread = transform.spread ?? "single";
+  if (spread === "single") {
+    ctx.translate(cx, cy);
+    if (transform.rotation) ctx.rotate((transform.rotation * Math.PI) / 180);
+    ctx.scale(transform.flipX ? -1 : 1, transform.flipY ? -1 : 1);
+    ctx.drawImage(srcCanvas, -drawW / 2, -drawH / 2, drawW, drawH);
+  } else {
+    // Tile / mirror across the entire target so every UV island gets coverage.
+    // ARK character & creature textures are atlases — tiling guarantees the
+    // image colors land on every body part instead of just a sub-rectangle.
+    const tiles = Math.max(1, Math.min(8, Math.round(transform.tile ?? 3)));
+    const tileW = (targetWidth / tiles) * transform.scale;
+    const tileH = (targetHeight / tiles) * transform.scale;
+    const offX = transform.offsetX * targetWidth;
+    const offY = transform.offsetY * targetHeight;
+    const mirror = spread === "mirror";
+    // Draw enough tiles to cover canvas even after offset & rotation
+    const startCol = -1;
+    const endCol = tiles + 2;
+    const startRow = -1;
+    const endRow = tiles + 2;
+    for (let row = startRow; row < endRow; row++) {
+      for (let col = startCol; col < endCol; col++) {
+        ctx.save();
+        const tx = col * tileW + tileW / 2 + offX;
+        const ty = row * tileH + tileH / 2 + offY;
+        ctx.translate(tx, ty);
+        if (transform.rotation) ctx.rotate((transform.rotation * Math.PI) / 180);
+        const mx = mirror && col % 2 !== 0 ? -1 : 1;
+        const my = mirror && row % 2 !== 0 ? -1 : 1;
+        ctx.scale((transform.flipX ? -1 : 1) * mx, (transform.flipY ? -1 : 1) * my);
+        ctx.drawImage(srcCanvas, -tileW / 2, -tileH / 2, tileW, tileH);
+        ctx.restore();
+      }
+    }
+  }
   ctx.restore();
 
   const scaledData = ctx.getImageData(0, 0, targetWidth, targetHeight);

@@ -55,6 +55,26 @@ const Index = () => {
   const target = PAINTING_TARGETS[selectedTarget];
   const finalFileName = `${fileName}${target.suffix}.pnt`;
 
+  // Categories with multi-island UV maps (body parts spread across atlas).
+  // For these we auto-enable Mirror tiling so the image covers all body parts evenly
+  // instead of clumping into one rectangle of the texture.
+  const BODY_CATEGORIES = new Set([
+    "humans", "carnivores", "herbivores", "flyers", "aquatic",
+    "misc_creatures", "invertebrates", "tek", "armor", "saddles",
+  ]);
+  const lastCategoryRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastCategoryRef.current === target.category) return;
+    lastCategoryRef.current = target.category;
+    setTransform((prev) => {
+      const isBody = BODY_CATEGORIES.has(target.category);
+      const wantSpread = isBody ? "mirror" : "single";
+      if (prev.spread === wantSpread) return prev;
+      return { ...prev, spread: wantSpread, tile: prev.tile ?? 3 };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target.category]);
+
   // Push history when adjustments change (debounced via ref guard)
   useEffect(() => {
     if (skipHistoryRef.current) { skipHistoryRef.current = false; return; }
