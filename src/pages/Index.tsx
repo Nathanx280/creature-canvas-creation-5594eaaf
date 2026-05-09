@@ -169,14 +169,15 @@ const Index = () => {
         target.height,
         enabledColors,
         dithering,
-        transform
+        transform,
+        quality
       );
       setPreviewImageData(result.previewImageData);
       setPntData(result.pntData);
       setConverting(false);
     }, 50);
     return () => clearTimeout(timeout);
-  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height, transform]);
+  }, [sourceImageData, selectedTarget, enabledColors, dithering, target.width, target.height, transform, quality]);
 
   // Palette usage stats from preview
   const usageStats = useMemo(() => {
