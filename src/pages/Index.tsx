@@ -549,6 +549,9 @@ const Index = () => {
             {/* Image Position / Crop on Target */}
             <ImageTransformControls value={transform} onChange={setTransform} />
 
+            {/* Detail & Quality */}
+            <DetailControls value={quality} onChange={setQuality} />
+
             {/* Adjustments */}
             <ImageAdjustments
               value={adjustments}
