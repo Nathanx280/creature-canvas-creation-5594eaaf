@@ -590,55 +590,96 @@ export function convertImageToPNT(
   const scaledData = ctx.getImageData(0, 0, targetWidth, targetHeight);
   const pixels = scaledData.data;
 
+  // Pre-quantization unsharp mask — boosts edge detail before palette mapping
+  if (quality.preSharpen > 0) {
+    unsharpMask(pixels, targetWidth, targetHeight, quality.preSharpen);
+  }
 
   const totalPixels = targetWidth * targetHeight;
   const bits = new Uint8Array(totalPixels);
 
-  // Working copy for dithering
-  const workPixels = new Float32Array(pixels.length);
-  for (let i = 0; i < pixels.length; i++) {
-    workPixels[i] = pixels[i];
-  }
+  // Edge map for dither suppression near edges
+  const edges = quality.edgePreserve > 0
+    ? edgeMap(pixels, targetWidth, targetHeight)
+    : null;
+  const edgeStrength = quality.edgePreserve / 100;
 
-  for (let y = 0; y < targetHeight; y++) {
-    for (let x = 0; x < targetWidth; x++) {
-      const idx = (y * targetWidth + x) * 4;
+  const algo = dithering ? quality.ditherAlgo : "none";
+  const strength = quality.ditherStrength / 100;
+  const colorMap = quality.colorMap;
 
-      const r = Math.max(0, Math.min(255, Math.round(workPixels[idx])));
-      const g = Math.max(0, Math.min(255, Math.round(workPixels[idx + 1])));
-      const b = Math.max(0, Math.min(255, Math.round(workPixels[idx + 2])));
-      const a = Math.max(0, Math.min(255, Math.round(workPixels[idx + 3])));
+  // Bayer (ordered) dithering — operates on a copy without error diffusion
+  if (algo === "bayer4" || algo === "bayer8") {
+    const matrix = algo === "bayer4" ? BAYER4 : BAYER8;
+    const size = matrix.length;
+    const norm = size * size;
+    // Spread strength across ~half of dye spacing
+    const amp = 32 * strength;
+    for (let y = 0; y < targetHeight; y++) {
+      for (let x = 0; x < targetWidth; x++) {
+        const idx = (y * targetWidth + x) * 4;
+        const t = (matrix[y % size][x % size] / norm - 0.5) * amp;
+        const r = Math.max(0, Math.min(255, pixels[idx]     + t));
+        const g = Math.max(0, Math.min(255, pixels[idx + 1] + t));
+        const b = Math.max(0, Math.min(255, pixels[idx + 2] + t));
+        const a = pixels[idx + 3];
+        bits[y * targetWidth + x] = findClosest(r, g, b, a, enabledColors, colorMap);
+      }
+    }
+  } else {
+    // Error-diffusion or none
+    const work = new Float32Array(pixels.length);
+    for (let i = 0; i < pixels.length; i++) work[i] = pixels[i];
 
-      const colorIndex = findClosestColorIndex(r, g, b, a, enabledColors);
-      bits[y * targetWidth + x] = colorIndex;
+    const kernel = algo !== "none" ? KERNELS[algo] : null;
 
-      if (dithering && a >= 128) {
-        const matched = getColorByIndex(colorIndex);
-        if (matched) {
-          const errR = r - matched.r;
-          const errG = g - matched.g;
-          const errB = b - matched.b;
+    for (let y = 0; y < targetHeight; y++) {
+      const reverse = quality.serpentine && (y % 2 === 1);
+      const xStart = reverse ? targetWidth - 1 : 0;
+      const xEnd   = reverse ? -1 : targetWidth;
+      const xStep  = reverse ? -1 : 1;
 
-          // Floyd-Steinberg dithering
-          const distribute = (dx: number, dy: number, factor: number) => {
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < targetWidth && ny >= 0 && ny < targetHeight) {
-              const nIdx = (ny * targetWidth + nx) * 4;
-              workPixels[nIdx] += errR * factor;
-              workPixels[nIdx + 1] += errG * factor;
-              workPixels[nIdx + 2] += errB * factor;
+      for (let x = xStart; x !== xEnd; x += xStep) {
+        const idx = (y * targetWidth + x) * 4;
+        const r = Math.max(0, Math.min(255, Math.round(work[idx])));
+        const g = Math.max(0, Math.min(255, Math.round(work[idx + 1])));
+        const b = Math.max(0, Math.min(255, Math.round(work[idx + 2])));
+        const a = Math.max(0, Math.min(255, Math.round(work[idx + 3])));
+
+        const colorIndex = findClosest(r, g, b, a, enabledColors, colorMap);
+        bits[y * targetWidth + x] = colorIndex;
+
+        if (kernel && a >= 128) {
+          const matched = getColorByIndex(colorIndex);
+          if (matched) {
+            // Local strength — reduce on edges to keep them crisp
+            let s = strength;
+            if (edges) {
+              const e = edges[y * targetWidth + x];
+              s *= 1 - edgeStrength * e;
             }
-          };
+            const errR = (r - matched.r) * s;
+            const errG = (g - matched.g) * s;
+            const errB = (b - matched.b) * s;
 
-          distribute(1, 0, 7 / 16);
-          distribute(-1, 1, 3 / 16);
-          distribute(0, 1, 5 / 16);
-          distribute(1, 1, 1 / 16);
+            for (const [dx, dy, w] of kernel.offsets) {
+              const sdx = reverse ? -dx : dx;
+              const nx = x + sdx;
+              const ny = y + dy;
+              if (nx >= 0 && nx < targetWidth && ny >= 0 && ny < targetHeight) {
+                const nIdx = (ny * targetWidth + nx) * 4;
+                const f = w / kernel.div;
+                work[nIdx]     += errR * f;
+                work[nIdx + 1] += errG * f;
+                work[nIdx + 2] += errB * f;
+              }
+            }
+          }
         }
       }
     }
   }
+
 
   // Build preview ImageData
   const previewData = new ImageData(targetWidth, targetHeight);
