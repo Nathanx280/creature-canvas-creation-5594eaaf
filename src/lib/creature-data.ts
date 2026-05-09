@@ -200,7 +200,7 @@ export const CREATURE_DATA: Record<string, CreatureInfo> = {
     description: "Allosaurus therotribus. Pack hunter (groups of 3). Inflicts a bleed effect on bite.",
     regions: REX_REGIONS,
   },
-  "_Yuty_Character_BP_C": {
+  "_Yutyrannus_Character_BP_C": {
     diet: "Carnivore", temperament: "Aggressive", archetype: "theropod", paintable: true,
     description: "Yutyrannus saevus. Roars to buff allies and terrify enemies. Support carnivore.",
     regions: [
