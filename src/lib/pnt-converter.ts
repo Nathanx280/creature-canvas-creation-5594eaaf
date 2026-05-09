@@ -1,4 +1,11 @@
 import { findClosestColorIndex, getColorByIndex } from "./ark-palette";
+import {
+  QualityOptions, DEFAULT_QUALITY, findClosest,
+  KERNELS, BAYER4, BAYER8, unsharpMask, edgeMap,
+} from "./quality";
+
+export type { QualityOptions, DitherAlgo, ColorMapMode } from "./quality";
+export { DEFAULT_QUALITY } from "./quality";
 
 export interface PNTResult {
   pntData: ArrayBuffer;
@@ -481,7 +488,8 @@ export function convertImageToPNT(
   targetHeight: number,
   enabledColors: Set<number>,
   dithering: boolean,
-  transform: ImageTransform = DEFAULT_TRANSFORM
+  transform: ImageTransform = DEFAULT_TRANSFORM,
+  quality: QualityOptions = DEFAULT_QUALITY
 ): PNTResult {
   // Build target canvas
   const canvas = document.createElement("canvas");
