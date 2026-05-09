@@ -5,7 +5,9 @@ import {
 import { useRef, useState, useCallback, ChangeEvent, useEffect, useMemo } from "react";
 import JSZip from "jszip";
 import { PAINTING_TARGETS, convertImageToPNT, downloadPNT, DEFAULT_TRANSFORM, ImageTransform } from "@/lib/pnt-converter";
+import { QualityOptions, DEFAULT_QUALITY } from "@/lib/quality";
 import ImageTransformControls from "@/components/ImageTransformControls";
+import DetailControls from "@/components/DetailControls";
 import { ARK_PALETTE } from "@/lib/ark-palette";
 import { applyAdjustments } from "@/lib/image-adjustments";
 import { autoPickPalette } from "@/lib/auto-palette";
@@ -31,6 +33,7 @@ const Index = () => {
   const [dithering, setDithering] = useState(true);
   const [adjustments, setAdjustments] = useState<Adjustments>(DEFAULT_ADJUSTMENTS);
   const [transform, setTransform] = useState<ImageTransform>(DEFAULT_TRANSFORM);
+  const [quality, setQuality] = useState<QualityOptions>(DEFAULT_QUALITY);
   const [enabledColors, setEnabledColors] = useState<Set<number>>(
     () => new Set(ARK_PALETTE.map((c) => c.index))
   );
