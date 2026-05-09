@@ -113,7 +113,7 @@ export const PAINTING_TARGETS: PaintingTarget[] = [
   { name: "Spino", suffix: "_Spino_Character_BP_C", width: 256, height: 256, category: "carnivores" },
   { name: "Carno", suffix: "_Carno_Character_BP_C", width: 256, height: 256, category: "carnivores" },
   { name: "Allosaurus", suffix: "_Allo_Character_BP_C", width: 256, height: 256, category: "carnivores" },
-  { name: "Yutyrannus", suffix: "_Yuty_Character_BP_C", width: 256, height: 256, category: "carnivores" },
+  { name: "Yutyrannus", suffix: "_Yutyrannus_Character_BP_C", width: 256, height: 256, category: "carnivores" },
   { name: "Giganotosaurus", suffix: "_Gigant_Character_BP_C", width: 256, height: 256, category: "carnivores" },
   { name: "Therizinosaurus", suffix: "_Therizino_Character_BP_C", width: 256, height: 256, category: "carnivores" },
   { name: "Baryonyx", suffix: "_Baryonyx_Character_BP_C", width: 256, height: 256, category: "carnivores" },
